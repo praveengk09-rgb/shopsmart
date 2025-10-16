@@ -19,33 +19,26 @@ class UniversalEcommerceScraper:
 
     def create_driver(self):
         options = uc.ChromeOptions()
+    
+        # Path for Render's Chromium
+        options.binary_location = "/usr/bin/chromium"
+    
         options.add_argument("--headless=new")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
+        options.add_argument("--disable-software-rasterizer")
+        options.add_argument("--single-process")
+        options.add_argument("--disable-setuid-sandbox")
         options.add_argument("--window-size=1920,1080")
         options.add_argument("--disable-blink-features=AutomationControlled")
-        options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-        
-        prefs = {
-            "profile.default_content_setting_values.geolocation": 1,  # Allow geolocation
-            "profile.default_content_settings.popups": 0,
-            "profile.default_content_setting_values.notifications": 2
-        }
-        options.add_experimental_option("prefs", prefs)
-        
-        self.driver = uc.Chrome(options=options)
-        
-        # Set geolocation to Mumbai coordinates for Croma
+        options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+
         try:
-            self.driver.execute_cdp_cmd("Emulation.setGeolocationOverride", {
-                "latitude": 19.0760,
-                "longitude": 72.8777,
-                "accuracy": 100
-            })
+              self.driver = uc.Chrome(options=options, driver_executable_path="/usr/bin/chromedriver")
         except:
-            pass
-        
+              self.driver = uc.Chrome(options=options)
+    
         return self.driver
 
     def handle_location_popup(self, timeout=5):
@@ -792,4 +785,5 @@ class UniversalEcommerceScraper:
         
         valid_products = [p for p in all_products if p['price_num'] and p['price_num'] >= 10]
         valid_products.sort(key=lambda x: x['price_num'])
+
         return valid_products
