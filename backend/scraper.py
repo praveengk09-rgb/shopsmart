@@ -21,41 +21,47 @@ class UniversalEcommerceScraper:
 
     def create_driver(self):
         options = uc.ChromeOptions()
-        # Headless mode enabled for background operation
+
+        # Tell Chrome where it's installed on Render
+        options.binary_location = "/usr/bin/chromium"
+
+        # These make Chrome work without a screen
         options.add_argument("--headless=new")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
+        options.add_argument("--single-process")
         options.add_argument("--window-size=1920,1080")
-        options.add_argument("--disable-blink-features=AutomationControlled")
-        options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-        # Add these for better compatibility
-        options.add_argument("--disable-web-security")
-        options.add_argument("--allow-running-insecure-content")
-        # Additional headless mode optimizations
-        options.add_argument("--disable-extensions")
-        options.add_argument("--disable-logging")
-        options.add_argument("--log-level=3")
-        
-        # Set geolocation preferences to avoid location popups
+        options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+
         prefs = {
-            "profile.default_content_setting_values.geolocation": 1,  # 1=allow, 2=block
+            "profile.default_content_setting_values.geolocation": 1,
             "profile.default_content_settings.popups": 0,
             "profile.default_content_setting_values.notifications": 2
         }
         options.add_experimental_option("prefs", prefs)
-        
-        self.driver = uc.Chrome(options=options)
-        
-        # Set geolocation to New Delhi coordinates
-        self.driver.execute_cdp_cmd("Emulation.setGeolocationOverride", {
-            "latitude": 28.6139,
-            "longitude": 77.2090,
-            "accuracy": 100
-        })
-        
-        return self.driver
 
+        # Try to create driver with Render's Chrome
+        try:
+            self.driver = uc.Chrome(
+                options=options,
+                driver_executable_path="/usr/bin/chromedriver"
+            )
+        except:
+            # Fallback if path is different
+            self.driver = uc.Chrome(options=options)
+
+        # Set location to Mumbai
+        try:
+            self.driver.execute_cdp_cmd("Emulation.setGeolocationOverride", {
+                "latitude": 19.0760,
+                "longitude": 72.8777,
+                "accuracy": 100
+            })
+        except:
+            pass
+
+        return self.driver
     def extract_price(self, price_text):
         """Extract numeric price from price text, handling various formats"""
         if not price_text or price_text == "N/A":
